@@ -26,6 +26,20 @@ class DBClient {
   isAlive() {
     return this.connected;
   }
+
+  async nbUsers() {
+    if (!this.connected) {
+      throw new Error('Not connected to MongoDB');
+    }
+    try {
+      const usersCollection = this.db.collection('users');
+      const count = await usersCollection.countDocuments();
+      return count;
+    } catch (err) {
+      console.error(`Error getting user count: ${err.message}`);
+      return null;
+    }
+  }
 }
 
 const dbClient = new DBClient();
