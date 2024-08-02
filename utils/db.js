@@ -10,6 +10,7 @@ class DBClient {
 
     this.client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
     this.database = database;
+    this.connected = false;
 
     this.client.connect((err) => {
       if (err) {
@@ -37,6 +38,20 @@ class DBClient {
       return count;
     } catch (err) {
       console.error(`Error getting user count: ${err.message}`);
+      return null;
+    }
+  }
+
+  async nbFiles() {
+    if (!this.connected) {
+      throw new Error('Not connected to MongoDB');
+    }
+    try {
+      const filesCollection = this.db.collection('files');
+      const count = await filesCollection.countDocuments();
+      return count
+    } catch (err) {
+      console.error(`Error getting file count: ${err.message}`);
       return null;
     }
   }
