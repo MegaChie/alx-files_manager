@@ -3,7 +3,7 @@ const sha1 = require('sha1');
 
 class UserController {
     static async postNew(req, res) {
-	const {emai, password } = req.body;
+	const {email , password } = req.body;
 
 	if(!email)
 	{
