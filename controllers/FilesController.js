@@ -80,7 +80,7 @@ class FilesController {
     return res.status(201).json(result.ops[0]);
   }
 
-  static async getFile(req, res) {
+  static async getShow(req, res) {
     const token = req.headers['x-token'];
     if (!token) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -105,7 +105,7 @@ class FilesController {
     return res.status(200).json(file);
   }
 
-  static async getFiles(req, res) {
+  static async getIndex(req, res) {
     const token = req.headers['x-token'];
     if (!token) {
       return res.status(401).json({ error: 'Unauthorized' });
