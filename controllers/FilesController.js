@@ -199,6 +199,46 @@ class FilesController {
 
     return res.status(200).json(updatedFile.value);
   }
+
+  static async getFile(req, res) {
+    const { id } = req.params;
+    const token = req.headers['x-token'];
+    let userId = null;
+
+    const file = await dbClient.db.collection('files').findOne({ _id: dbClient.objectId(id) });
+    if (!file) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    if (file.type === 'folder') {
+      return res.status(400).json({ error: "A folder doesn't have content" });
+    }
+
+    if (!file.isPublic) {
+      if (!token) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      userId = await redisClient.get(`auth_${token}`);
+      if (!userId) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      const user = await dbClient.db.collection('users').findOne({ _id: dbClient.objectId(userId) });
+      if (!user || file.userId.toString() !== user._id.toString()) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+    }
+
+    if (!fs.existsSync(file.localPath)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const mimeType = mime.lookup(file.name);
+    res.setHeader('Content-Type', mimeType);
+    const fileContent = fs.readFileSync(file.localPath);
+    return res.status(200).send(fileContent);
+  }
 }
 
 module.exports = FilesController;
