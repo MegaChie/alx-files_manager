@@ -81,7 +81,7 @@ class AuthController {
 
     await redisClient.delAsync(redisKey);
 
-    return res.status(204);
+    return res.status(204).send();
   } catch(error)
   {
     console.error('Error during disconnect:', error);
