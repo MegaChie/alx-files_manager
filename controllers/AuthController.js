@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const dbClient = require('../utils/db');
 const sha1 = require('sha1');
 const redisClient = require('../utils/redis');
+const { use } = require('chai');
 
 class AuthController {
     static async getConnect(req, res) {
@@ -57,6 +58,37 @@ class AuthController {
 
 	
 	}
+
+  static async disconnect(req, res)
+  {
+    try{
+    // fetch from x-token
+    const token = req.headers['x-token'];
+
+    if(!token)
+    {
+      return res.status(401).json({error: "Unauthorized" });
+    }
+
+    const redisKey = `auth_${token}`;
+
+    const userId = await redisClient.getAsync(redisKey);
+
+    if(!userId)
+    {
+      return res.status(401).json({ Unauthorized: 'Invalid or expired token' });
+    }
+
+    await redisClient.delAsync(redisKey);
+
+    return res.status(204);
+  } catch(error)
+  {
+    console.error('Error during disconnect:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+
+}
 	
 
     
