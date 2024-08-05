@@ -43,7 +43,7 @@ class AuthController {
       console.log(redisKey);
       */
 	  redisClient.set(redisKey, ttlInSeconds.toString(), user._id.toString());
-		return res.status(200).json({ message: `token: ${token}` });
+		return res.status(200).json({ token: `${token}` });
 		
       
 
