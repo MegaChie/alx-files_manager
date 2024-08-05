@@ -6,8 +6,8 @@ const waitConnection = async () => {
     if (dbClient.isAlive()) {
       return;
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    i++;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    i += 1;
   }
   throw new Error('Failed to connect to the database');
 };
