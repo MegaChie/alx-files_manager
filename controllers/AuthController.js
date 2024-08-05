@@ -59,7 +59,7 @@ class AuthController {
 	
 	}
 
-  static async disconnect(req, res)
+  static async getDisconnect(req, res)
   {
     try{
     // fetch from x-token
