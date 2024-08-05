@@ -39,10 +39,10 @@ class RedisClient {
     }
   }
 
-  async set(key, value, duration) {
+  async set(key, duration, value) {
     try {
       await this.setexAsync(key, duration, value);
-      // console.log(`Key ${key} set with value ${value} for ${duration} seconds`);
+     console.log(`Key ${key} set with value ${value} for ${duration} seconds`);
     } catch (err) {
       console.log(`Error setting key ${key}: ${err.message}`);
     }

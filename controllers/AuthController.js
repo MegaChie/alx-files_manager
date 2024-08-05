@@ -1,12 +1,12 @@
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const dbClient = require('../utils/db');
+const sha1 = require('sha1');
 const redisClient = require('../utils/redis');
 
 class AuthController {
     static async getConnect(req, res) {
 	try {
-	console.log("Starting....");
 	    const authHeader = req.headers['authorization'];
 	    if(!authHeader) {
 		return res.status(401).json({ message: 'Authorization header missing'});
@@ -17,25 +17,36 @@ class AuthController {
 	    const [email, password] = credentials.split(':');
 	    const user = await dbClient.db.collection('users').findOne ({ email });
 	    if (!user) {
-		return res.status(401).json({ message: "Unauthorized" });
+		return res.status(401).json({ message: "User doesn't exist" });
 
 	    }
-	    const passwordMatch = await bcrypt.compare(password, user.password);
-	    if(!passwordMatch){
-		return res.status(401).json({ message: "Unauthorized" });
-	    }
+      
+      if(user.sha1Password)
+      {
+        const sha1Password = sha1(password);
+        if (sha1Password !== user.sha1Password) {
+          return res.status(401).json({ message: 'Unauthorized: Incorrect password' });
+        }
+      }
+
 
 	    const token = uuidv4();
 
 	    const redisKey =  `auth_${token}`;
-
-	    redisClient.set(redisKey, user._id.toString(), 'EX', 24*60*60, (err) => {
+      const ttlInSeconds = 24 * 60 * 60; // 24 hours in seconds
+      /*console.log(token);
+      console.log(ttlInSeconds);
+      console.log(user._id.toString());
+      console.log(redisKey);
+      */
+	    redisClient.set(redisKey, ttlInSeconds.toString(), user._id.toString(), (err) => {
 		if (err)
 		{
 		    console.error('Error storing token in Redis:', err);
           return res.status(500).json({ message: 'Internal server error' });
 		}
-		return res.status(200).json({ token: token });
+    else{return res.status(200).json({ message: `token: ${token}` });}
+		
 	    });
 
 	} catch(error)
@@ -46,7 +57,6 @@ class AuthController {
 
 	}
 
-    	console.log("finished");
 	
 	}
 	
