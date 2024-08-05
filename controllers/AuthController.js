@@ -17,6 +17,7 @@ class AuthController {
 	    const base64Credentials = authHeader.split(' ')[1];
 	    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
 	    const [email, password] = credentials.split(':');
+      console.log(`User email is: ${email}`);
 	    const user = await dbClient.db.collection('users').findOne ({ email });
 	    if (!user) {
 		return res.status(401).json({ message: "User doesn't exist" });
