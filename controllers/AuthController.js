@@ -17,7 +17,7 @@ class AuthController {
 	    const base64Credentials = authHeader.split(' ')[1];
 	    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
 	    const [email, password] = credentials.split(':');
-      console.log(`User email is: ${email}`);
+      //console.log(`User email is: ${email}`);
 	    const user = await dbClient.db.collection('users').findOne ({ email });
 	    if (!user) {
 		return res.status(401).json({ message: "User doesn't exist" });
@@ -42,15 +42,10 @@ class AuthController {
       console.log(user._id.toString());
       console.log(redisKey);
       */
-	    redisClient.set(redisKey, ttlInSeconds.toString(), user._id.toString(), (err) => {
-		if (err)
-		{
-		    console.error('Error storing token in Redis:', err);
-          return res.status(500).json({ message: 'Internal server error' });
-		}
-    else{return res.status(200).json({ message: `token: ${token}` });}
+	  redisClient.set(redisKey, ttlInSeconds.toString(), user._id.toString());
+		return res.status(200).json({ message: `token: ${token}` });
 		
-	    });
+      
 
 	} catch(error)
 	{
