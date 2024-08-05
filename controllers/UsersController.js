@@ -55,7 +55,7 @@ class UserController {
       const userId = await redisClient.getAsync(redisKey);
 
       if (!userId) {
-        return res.status(401).json({ message: 'Unauthorized: Invalid or expired token' });
+        return res.status(401).json({ error: 'Unauthorized' });
       }
       const user = dbClient.db.collection('users').findOne({ _id: new ObjectId(userId) });
 

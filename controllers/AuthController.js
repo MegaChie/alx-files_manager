@@ -10,7 +10,7 @@ class AuthController {
 	try {
     
 
-	    const authHeader = req.headers['authorization'];
+	    const authHeader = req.headers['Authorization'];
 	    if(!authHeader) {
 		return res.status(401).json({ message: 'Authorization header missing'});
 		
