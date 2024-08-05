@@ -1,59 +1,44 @@
 const { v4: uuidv4 } = require('uuid');
-const mime = require('mime-types');
 const fs = require('fs');
 const path = require('path');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
+const mime = require('mime-types');
+const Bull = require('bull');
+const fileQueue = new Bull('fileQueue');
 
 class FilesController {
   static async postUpload(req, res) {
-    const token = req.headers['x-token'];
-
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const userId = await redisClient.get(`auth_${token}`);
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const user = await dbClient.db.collection('users').findOne({ _id: dbClient.objectId(userId) });
-
-    if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
     const { name, type, parentId = 0, isPublic = false, data } = req.body;
-
+    const token = req.headers['x-token'];
+    
     if (!name) {
       return res.status(400).json({ error: 'Missing name' });
     }
-
-    const validTypes = ['folder', 'file', 'image'];
-    if (!type || !validTypes.includes(type)) {
+    if (!type || !['folder', 'file', 'image'].includes(type)) {
       return res.status(400).json({ error: 'Missing type' });
     }
-
     if (type !== 'folder' && !data) {
       return res.status(400).json({ error: 'Missing data' });
     }
 
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     if (parentId !== 0) {
       const parentFile = await dbClient.db.collection('files').findOne({ _id: dbClient.objectId(parentId) });
-
       if (!parentFile) {
         return res.status(400).json({ error: 'Parent not found' });
       }
-
       if (parentFile.type !== 'folder') {
         return res.status(400).json({ error: 'Parent is not a folder' });
       }
     }
 
-    const fileData = {
-      userId: user._id,
+    const fileDocument = {
+      userId: dbClient.objectId(userId),
       name,
       type,
       isPublic,
@@ -61,8 +46,8 @@ class FilesController {
     };
 
     if (type === 'folder') {
-      const result = await dbClient.db.collection('files').insertOne(fileData);
-      return res.status(201).json(result.ops[0]);
+      await dbClient.db.collection('files').insertOne(fileDocument);
+      return res.status(201).json(fileDocument);
     }
 
     const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -70,14 +55,17 @@ class FilesController {
       fs.mkdirSync(folderPath, { recursive: true });
     }
 
-    const filePath = path.join(folderPath, uuidv4());
-    const buffer = Buffer.from(data, 'base64');
-    fs.writeFileSync(filePath, buffer);
+    const localPath = path.join(folderPath, uuidv4());
+    fs.writeFileSync(localPath, Buffer.from(data, 'base64'));
+    fileDocument.localPath = localPath;
 
-    fileData.localPath = filePath;
+    await dbClient.db.collection('files').insertOne(fileDocument);
 
-    const result = await dbClient.db.collection('files').insertOne(fileData);
-    return res.status(201).json(result.ops[0]);
+    if (type === 'image') {
+      await fileQueue.add({ userId, fileId: fileDocument._id });
+    }
+
+    return res.status(201).json(fileDocument);
   }
 
   static async getShow(req, res) {
@@ -203,6 +191,7 @@ class FilesController {
   static async getFile(req, res) {
     const { id } = req.params;
     const token = req.headers['x-token'];
+    const { size } = req.query;
     let userId = null;
 
     const file = await dbClient.db.collection('files').findOne({ _id: dbClient.objectId(id) });
@@ -230,13 +219,18 @@ class FilesController {
       }
     }
 
-    if (!fs.existsSync(file.localPath)) {
+    let filePath = file.localPath;
+    if (size && ['500', '250', '100'].includes(size)) {
+      filePath = `${file.localPath}_${size}`;
+    }
+
+    if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Not found' });
     }
 
     const mimeType = mime.lookup(file.name);
     res.setHeader('Content-Type', mimeType);
-    const fileContent = fs.readFileSync(file.localPath);
+    const fileContent = fs.readFileSync(filePath);
     return res.status(200).send(fileContent);
   }
 }
