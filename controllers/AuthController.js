@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
-const dbClient = require('../utils/db');
+const {dbClient, ObjectId} = require('../utils/db');
 const sha1 = require('sha1');
 const redisClient = require('../utils/redis');
 const { use } = require('chai');
