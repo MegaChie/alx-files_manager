@@ -1,13 +1,13 @@
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
-const { connection_to_db } = require('../utils/db');
+const dbClient = require('../utils/db');
 const sha1 = require('sha1');
 const redisClient = require('../utils/redis');
 
 class AuthController {
     static async getConnect(req, res) {
 	try {
-    const dbClient = await connection_to_db();
+    
 
 	    const authHeader = req.headers['authorization'];
 	    if(!authHeader) {
