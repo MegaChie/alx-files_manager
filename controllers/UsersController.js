@@ -57,7 +57,19 @@ class UserController {
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
-      const user = dbClient.db.collection('users').findOne({ _id: new ObjectId(userId) });
+
+      console.log('User ID retrieved from Redis:', userId);
+      try
+      {
+
+        const userObjectId = new ObjectId(userId);
+        console.log('objectId from mongo:', userObjectId);
+        const user = dbClient.db.collection('users').findOne({ _id: userObjectId });
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+      
 
       if (!user) {
         return res.status(401).json({ message: 'Unauthorized: User not found' });
@@ -67,10 +79,15 @@ class UserController {
       {
         id: user._id.toString(),
         email: user.email
-      } 
+      }; 
 
       return res.status(200).json(userData);
-
+    } catch(objectIdError)
+    {
+       
+       console.error('Invalid ObjectId:', objectIdError);
+       return res.status(400).json({ message: 'Invalid user ID format' });
+    }
 
     } catch(error)
     { 
