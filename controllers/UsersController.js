@@ -62,7 +62,7 @@ class UserController {
       try
       {
 
-        const userObjectId = new ObjectId(userId);
+        const userObjectId = new ObjectId(userId.toString());
         console.log('objectId from mongo:', userObjectId);
         const user = dbClient.db.collection('users').findOne({ _id: userObjectId });
         if (!user) {
