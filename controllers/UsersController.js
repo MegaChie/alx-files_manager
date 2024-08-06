@@ -64,7 +64,7 @@ class UserController {
 
         const userObjectId = new ObjectId(userId.toString());
         console.log('objectId from mongo:', userObjectId);
-        const user = dbClient.db.collection('users').findOne({ _id: userObjectId });
+        const user = await dbClient.db.collection('users').findOne({ _id: userObjectId });
         console.log(user);
         if (!user) {
           return res.status(404).json({ message: 'User not found' });
