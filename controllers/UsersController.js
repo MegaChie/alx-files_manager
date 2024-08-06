@@ -58,14 +58,14 @@ class UserController {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      console.log('User ID retrieved from Redis:', userId);
+      // console.log('User ID retrieved from Redis:', userId);
       try
       {
 
         const userObjectId = new ObjectId(userId.toString());
-        console.log('objectId from mongo:', userObjectId);
+        // console.log('objectId from mongo:', userObjectId);
         const user = await dbClient.db.collection('users').findOne({ _id: userObjectId });
-        console.log(user);
+        // console.log(user);
         if (!user) {
           return res.status(404).json({ message: 'User not found' });
         }
