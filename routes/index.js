@@ -9,6 +9,7 @@ router.get('/status', AppController.getStatus);
 router.get('/stats', AppController.getStats);
 router.get('/files/:id', FilesController.getShow);
 router.get('/files', FilesController.getIndex);
+router.post('/files', FilesController.postUpload);
 router.get('/files/:id/data', FilesController.getFile);
 router.get('/connect',AuthController.getConnect);
 router.get('/disconnect',AuthController.getDisconnect);
