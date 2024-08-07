@@ -11,9 +11,10 @@ class DBClient {
     this.client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
     this.connected = false;
 
-    this.client.connect()
+    // Promise to ensure connection readiness
+    this.connectionPromise = this.client.connect()
       .then(() => {
-        // console.log('Connected successfully to MongoDB');
+        console.log('Connected successfully to MongoDB');
         this.connected = true;
         this.db = this.client.db(database);
       })
@@ -23,11 +24,14 @@ class DBClient {
       });
   }
 
-  isAlive() {
+  async isAlive() {
+    // Await the connection promise to ensure accurate status
+    await this.connectionPromise;
     return this.connected;
   }
 
   async nbUsers() {
+    await this.isAlive(); // Ensure connection is alive before proceeding
     if (!this.connected) {
       throw new Error('Not connected to MongoDB');
     }
@@ -43,6 +47,7 @@ class DBClient {
   }
 
   async nbFiles() {
+    await this.isAlive(); // Ensure connection is alive before proceeding
     if (!this.connected) {
       throw new Error('Not connected to MongoDB');
     }
@@ -59,4 +64,5 @@ class DBClient {
 }
 
 const dbClient = new DBClient();
-module.exports = {dbClient, ObjectId};
+module.exports = dbClient;
+module.exports.ObjectId = ObjectId;
