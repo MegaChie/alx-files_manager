@@ -1,4 +1,6 @@
-const {dbClient, ObjectId} = require('../utils/db');
+//const dbClient = require('../utils/db');
+import dbClient from '../utils/db';
+import { ObjectId } from '../utils/db';
 const sha1 = require('sha1');
 const redisClient = require('../utils/redis');
 
@@ -20,6 +22,7 @@ class UserController {
 	// Check if user still exists
 
 	const isExist = await dbClient.db.collection('users').findOne({ email });
+
 	if (isExist)
 	{
 		return res.status(400).json({ error: "Already exist" });
