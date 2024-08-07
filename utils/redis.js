@@ -9,23 +9,23 @@ class RedisClient {
     this.connected = false;
 
     this.client.on('error', (error) => {
-      console.log(`Redis client not connected to the server: ${error.message}`);
+      //console.log(`Redis client not connected to the server: ${error.message}`);
       this.connected = false;
     });
 
     this.client.on('connect', () => {
-      console.log('Redis client connected to the server');
+    //  console.log('Redis client connected to the server');
     });
 
     this.client.on('ready', () => {
-      console.log('Redis client is ready');
+      //console.log('Redis client is ready');
       this.connected = true;
     });
 
     // Promise to ensure connection readiness
     this.connectionPromise = new Promise((resolve) => {
       this.client.on('ready', () => {
-        console.log('Redis client is ready');
+      //  console.log('Redis client is ready');
         this.connected = true;
         setTimeout(() => {
           resolve();
