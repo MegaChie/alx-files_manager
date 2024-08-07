@@ -1,62 +1,90 @@
-const redis = require('redis');
-const { promisify } = require('util');
+import redis from 'redis';
+import { promisify } from 'util';
 
+/**
+ * Class for performing operations with Redis service
+ */
 class RedisClient {
   constructor() {
     this.client = redis.createClient();
     this.getAsync = promisify(this.client.get).bind(this.client);
-    this.setexAsync = promisify(this.client.setex).bind(this.client);
-    this.delAsync = promisify(this.client.del).bind(this.client);
-    this.connectionEstablished = false;
 
-    this.client.on('error', (err) => {
-      console.log(`could not create, ${err.message} encountered`);
-      this.connectionEstablished = false;
+    this.connected = false; // Internal flag for connection status
+
+    this.client.on('error', (error) => {
+      console.log(`Redis client not connected to the server: ${error.message}`);
+      this.connected = false; // Update status on error
     });
 
     this.client.on('connect', () => {
-      this.connectionEstablished = true;
-      // console.log('Connection established');
+      console.log('Redis client connected to the server');
     });
 
-    this.client.on('end', () => {
-      console.log('Connection closed');
-      // this.connectionEstablished = false;
+    // Wait for the client to be ready before proceeding
+    this.connectionReady = new Promise((resolve) => {
+      this.client.on('ready', () => {
+        console.log('Redis client is ready');
+        this.connected = true; // Ensure connected is true on ready
+        setTimeout(() => {  // Add a delay to ensure readiness
+          resolve();
+        }, 1000); // Adjust delay as needed
+      });
     });
   }
 
+  /**
+   * Checks if connection to Redis is Alive
+   * @return {boolean} true if connection alive or false if not
+   */
   isAlive() {
-    return this.connectionEstablished;
+    return this.connected; // Use the internal flag for connection status
   }
 
+  /**
+   * Ensures the connection to Redis is ready
+   * @return {Promise} resolves when connection is ready
+   */
+  async ensureConnection() {
+    if (!this.connected) {
+      console.log('Waiting for Redis connection...');
+      await this.connectionReady; // Wait for the connection to be ready
+    }
+  }
+
+  /**
+   * Gets value corresponding to key in redis
+   * @param {string} key key to search for in redis
+   * @return {Promise<string>} value of key
+   */
   async get(key) {
-    try {
-      const value = await this.getAsync(key);
-      return value;
-    } catch (err) {
-      console.log(`Error getting key ${key}: ${err.message}`);
-      return null;
-    }
+    await this.ensureConnection(); // Ensure the connection is ready
+    const value = await this.getAsync(key);
+    return value;
   }
 
-  async set(key, duration, value) {
-    try {
-      await this.setexAsync(key, duration, value);
-     //console.log(`Key ${key} set with value ${value} for ${duration} seconds`);
-    } catch (err) {
-      console.log(`Error setting key ${key}: ${err.message}`);
-    }
+  /**
+   * Creates a new key in redis with a specific TTL
+   * @param {string} key key to be saved in redis
+   * @param {string} value value to be assigned to key
+   * @param {number} duration TTL of key
+   * @return {undefined} No return
+   */
+  async set(key, value, duration) {
+    await this.ensureConnection(); // Ensure the connection is ready
+    this.client.setex(key, duration, value);
   }
 
+  /**
+   * Deletes key in redis service
+   * @param {string} key key to be deleted
+   * @return {undefined} No return
+   */
   async del(key) {
-    try {
-      await this.delAsync(key);
-      console.log(`Key ${key} deleted`);
-    } catch (err) {
-      console.log(`Error deleting key ${key}: ${err.message}`);
-    }
+    await this.ensureConnection(); // Ensure the connection is ready
+    this.client.del(key);
   }
 }
 
 const redisClient = new RedisClient();
-module.exports = redisClient;
+
+export default redisClient;
