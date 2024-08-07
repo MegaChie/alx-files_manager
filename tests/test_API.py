@@ -13,6 +13,7 @@ header = {"Content-Type": "application/json"}
 token = None
 temp_data = {"name": "myText.txt", "type": "file",
              "data": "SGVsbG8gV2Vic3RhY2shCg=="}
+ID = None
 
 
 def test_status():
@@ -95,7 +96,7 @@ def test_disconnect():
         assert marko.status_code == 204
 
 
-def test_files_no_auth():
+def test_files_post_no_auth():
     """Tests files endpoint without auth"""
     header = {"Content-Type": "application/json"}
     with req.post(base + "files", headers=header,
@@ -105,7 +106,7 @@ def test_files_no_auth():
         assert marko.json() == payload
 
 
-def test_files():
+def test_files_post():
     """Tests files endpoint"""
     header = {"Content-Type": "application/json",
               "X-Token": token
@@ -121,7 +122,7 @@ def test_files():
         assert isinstance(marko.json()["parentId"], bool)
 
 
-def test_files_id_without_auth():
+def test_files_without_auth():
     """Tests files endpoint without auth"""
     header = {"Content-Type": "application/json"}
     with req.get(base + "files", headers=header) as marko:
@@ -130,15 +131,124 @@ def test_files_id_without_auth():
         assert marko.json() == payload
 
 
-def test_files_id():
+def test_files():
     """Tests files endpoint"""
     header = {"Content-Type": "application/json",
               "X-Token": token
               }
     with req.get(base + "files", headers=header) as marko:
         assert isinstance(marko.json()["name"], str)
+        assert isinstance(marko.json()["id"], str)
         assert isinstance(marko.json()["userId"], str)
         assert isinstance(marko.json()["name"], str)
         assert isinstance(marko.json()["type"], str)
         assert isinstance(marko.json()["isPublic"], bool)
         assert isinstance(marko.json()["parentId"], bool)
+        ID = marko.json().get("id")
+
+
+def test_files_id_without_auth():
+    """Tests /files/:id endpoint without auth"""
+    header = {"Content-Type": "application/json"}
+    with req.get(base + "files/" + ID, headers=header) as marko:
+        assert marko.status_code == 401
+        payload = {"error": "Unauthorized"}
+        assert marko.json() == payload
+
+
+def test_files_id():
+    """Tests /files/:id endpoint"""
+    header = {"Content-Type": "application/json",
+              "X-Token": token
+              }
+    with req.get(base + "files/" + ID, headers=header) as marko:
+        assert marko.status_code == 200
+        assert isinstance(marko.json()["name"], str)
+        assert isinstance(marko.json()["id"], str)
+        assert isinstance(marko.json()["userId"], str)
+        assert isinstance(marko.json()["name"], str)
+        assert isinstance(marko.json()["type"], str)
+        assert isinstance(marko.json()["isPublic"], bool)
+        assert isinstance(marko.json()["parentId"], bool)
+
+
+def test_files_id_publish_without_auth():
+
+    header = {"Content-Type": "application/json",
+              "X-Token": token
+              }
+    with req.put(base + "files/" + ID + "/publish", headers=header,
+                 data=temp_data) as marko:
+        assert marko.status_code == 401
+        payload = {"error": "Unauthorized"}
+        assert marko.json() == payload
+
+
+def test_files_id_publish_fake():
+    """Tests files/:id/publish endpoint with fake ID"""
+    header = {"Content-Type": "application/json",
+              "X-Token": token
+              }
+    with req.put(base + "files/" + "fake" + "/publish", headers=header,
+                 data=temp_data) as marko:
+        assert marko.status_code == 404
+        payload = {"error": "Not found"}
+        assert marko.json() == payload
+
+
+def test_files_id_publish():
+    """Tests files/:id/publish endpoint"""
+    header = {"Content-Type": "application/json",
+              "X-Token": token
+              }
+    with req.put(base + "files/" + ID + "/publish", headers=header,
+                 data=temp_data) as marko:
+        assert marko.status_code == 200
+        assert isinstance(marko.json()["name"], str)
+        assert isinstance(marko.json()["id"], str)
+        assert isinstance(marko.json()["userId"], str)
+        assert isinstance(marko.json()["name"], str)
+        assert isinstance(marko.json()["type"], str)
+        assert isinstance(marko.json()["isPublic"], bool)
+        assert isinstance(marko.json()["parentId"], bool)
+        assert marko.json().get("isPublic") == True
+
+
+def test_files_id_unpublish_without_auth():
+    """Tests /files/:id/unpublish endpoint without auth"""
+    header = {"Content-Type": "application/json"}
+    with req.put(base + "files/" + ID + "/publish", headers=header,
+                 data=temp_data) as marko:
+        assert marko.status_code == 401
+        payload = {"error": "Unauthorized"}
+        assert marko.json() == payload
+
+
+def test_files_id_unpublish():
+    """Tests /files/:id/unpublish endpoint with fake ID"""
+    header = {"Content-Type": "application/json",
+              "X-Token": token
+              }
+    with req.put(base + "files/" + "fake" + "/publish", headers=header,
+                 data=temp_data) as marko:
+        assert marko.status_code == 404
+        payload = {"error": "Not found"}
+        assert marko.json() == payload
+
+
+def test_files_id_unpublish():
+    """Tests /files/:id/unpublish endpoint"""
+    header = {"Content-Type": "application/json",
+              "X-Token": token
+              }
+    with req.put(base + "files/" + ID + "/publish", headers=header,
+                 data=temp_data) as marko:
+        assert marko.status_code == 200
+        assert isinstance(marko.json()["name"], str)
+        assert isinstance(marko.json()["id"], str)
+        assert isinstance(marko.json()["userId"], str)
+        assert isinstance(marko.json()["name"], str)
+        assert isinstance(marko.json()["type"], str)
+        assert isinstance(marko.json()["isPublic"], bool)
+        assert isinstance(marko.json()["parentId"], bool)
+        assert marko.json().get("isPublic") == False
