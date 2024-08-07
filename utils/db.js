@@ -14,7 +14,7 @@ class DBClient {
     // Promise to ensure connection readiness
     this.connectionPromise = this.client.connect()
       .then(() => {
-        //console.log('Connected successfully to MongoDB');
+        // console.log('Connected successfully to MongoDB');
         this.connected = true;
         this.db = this.client.db(database);
       })

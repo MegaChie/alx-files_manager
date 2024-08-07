@@ -9,7 +9,10 @@ class RedisClient {
     this.connected = false;
 
     this.client.on('error', (error) => {
-      //console.log(`Redis client not connected to the server: ${error.message}`);
+      // console.log(`Redis client not connected to the server: ${error.message}`);
+      if (error) {
+        throw error;
+      }
       this.connected = false;
     });
 
@@ -18,7 +21,7 @@ class RedisClient {
     });
 
     this.client.on('ready', () => {
-      //console.log('Redis client is ready');
+      // console.log('Redis client is ready');
       this.connected = true;
     });
 
