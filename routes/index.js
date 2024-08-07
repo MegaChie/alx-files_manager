@@ -3,7 +3,6 @@ const AppController = require('../controllers/AppController');
 const FilesController = require('../controllers/FilesController');
 const UserController = require('../controllers/UsersController');
 const AuthController = require('../controllers/AuthController');
-
 const router = express.Router();
 
 router.get('/status', AppController.getStatus);
@@ -12,9 +11,9 @@ router.get('/files/:id', FilesController.getShow);
 router.get('/files', FilesController.getIndex);
 router.post('/files', FilesController.postUpload);
 router.get('/files/:id/data', FilesController.getFile);
-router.get('/connect', AuthController.getConnect);
-router.get('/disconnect', AuthController.getDisconnect);
-router.get('/users/me', UserController.getMe);
+router.get('/connect',AuthController.getConnect);
+router.get('/disconnect',AuthController.getDisconnect);
+router.get('/users/me',UserController.getMe);
 
 router.post('/users', UserController.postNew);
 router.put('/files/:id/publish', FilesController.putPublish);
